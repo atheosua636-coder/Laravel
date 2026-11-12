@@ -1,51 +1,60 @@
-# Simple POS — Customers and Users with Eloquent
+# Simple POS and Tasks for Today
 
-A Laravel 12 POS sample app that displays customer and staff records from a database using Eloquent models.
+A Laravel 12 project that combines a small point-of-sale directory with a task-management module. POS customers and staff, tasks, and the single task-profile user are stored in SQLite and retrieved through Eloquent.
 
 ## Requirements
 
-- PHP 8.2 or newer
+- PHP 8.2 or newer with SQLite enabled
 - Composer
-- SQLite (enabled in PHP)
-- Node.js and npm (only needed if rebuilding frontend assets)
+- Node.js and npm only if rebuilding frontend assets
 
-## Setup
+## Setup (Windows PowerShell)
 
-```bash
+Run these commands from the folder containing `artisan`:
+
+```powershell
 composer install
-cp .env.example .env
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 php artisan key:generate
-```
-
-The default configuration uses SQLite. Create its database file if it does not exist, then migrate and seed it:
-
-```bash
-touch database/database.sqlite
+if (!(Test-Path database\database.sqlite)) { New-Item -ItemType File -Path database\database.sqlite | Out-Null }
 php artisan migrate --seed
 php artisan serve
 ```
 
-Open the URL printed by `php artisan serve`, then visit `/customers` or `/users`.
+Open the local URL printed by `php artisan serve`. The default database connection is SQLite.
 
-To rebuild the CSS/JS assets, run `npm install` and `npm run build`.
+For macOS or Linux, create the database file with `touch database/database.sqlite` in place of the PowerShell `New-Item` command.
 
-## Database
+## Pages
 
-- `customers`: `full_name`, `email`, and `phone`
-- `users`: unique `username` and `full_name`
+- `/` — Welcome page with only tasks scheduled for today
+- `/tasks` — All tasks, ordered by task date
+- `/profile` — The single user profile seeded for the task assessment
+- `/about` — Static project page identifying the developer
+- `/pos` — POS landing page
+- `/customers` — POS customer records
+- `/users` — POS staff records
 
-The `DatabaseSeeder` creates five sample customers and five sample users. The customer and user pages retrieve their records through `Customer::all()` and `User::all()`, then render Eloquent model properties in Blade.
+## Database and seeding
 
-To reset the local database and load the samples again:
+- `customers`: full name, email, and phone; five sample customers
+- `users`: unique username, full name, and email; exactly one task-profile user
+- `pos_staff`: unique username and full name; five POS staff records, kept separate so the task assessment can seed exactly one `users` record
+- `tasks`: title, status (defaults to `pending`), task date, and timestamps; eight sample tasks across four dates, including today
 
-```bash
+The task welcome page filters with Eloquent for today's date. The full task list retrieves every task and orders by date. Timestamps are set automatically when the seeder creates Eloquent models.
+
+To rebuild the database and reload all sample records:
+
+```powershell
 php artisan migrate:fresh --seed
 ```
 
-## Main files
+To rebuild frontend assets, run `npm install` and `npm run build`.
 
-- `app/Models/Customer.php` and `app/Models/User.php`
-- `app/Http/Controllers/CustomerController.php` and `app/Http/Controllers/UserController.php`
-- `database/migrations/`
-- `database/seeders/DatabaseSeeder.php`
-- `resources/views/customers/index.blade.php` and `resources/views/users/index.blade.php`
+## Main source files
+
+- Models: `app/Models/Customer.php`, `app/Models/PosStaff.php`, `app/Models/Task.php`, `app/Models/User.php`
+- Controllers: `app/Http/Controllers/CustomerController.php`, `PageController.php`, `ProfileController.php`, `TaskController.php`, `UserController.php`
+- Database: `database/migrations/`, `database/seeders/DatabaseSeeder.php`
+- Views: `resources/views/`
